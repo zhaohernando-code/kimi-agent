@@ -192,8 +192,22 @@ class TaskExecutor:
         
         return metadata
     
+    def _load_kimi_md(self) -> str:
+        """加载 KIMI.md 规范内容"""
+        try:
+            kimi_md_path = os.path.join(os.path.dirname(__file__), '..', 'KIMI.md')
+            if os.path.exists(kimi_md_path):
+                with open(kimi_md_path, 'r', encoding='utf-8') as f:
+                    return f.read()
+        except Exception:
+            pass
+        return ""
+    
     def _build_prompt(self, title: str, body: str, is_frontend: bool, target_repo: str) -> str:
         """构建 Kimi 提示词"""
+        # 动态加载 KIMI.md
+        kimi_md_content = self._load_kimi_md()
+        
         prompt = f"""## 角色
 你是一个自动化开发助手，正在执行一个 GitHub Issue 任务。
 
@@ -210,16 +224,7 @@ class TaskExecutor:
 {git_manager._get_repo_path(target_repo)}
 
 ## KIMI.md 规范要求（必须遵守）
-**错误处理原则**：
-- 遇到错误时，不要停止并返回失败，而是主动分析问题并尝试修复
-- 持续修复直到任务成功完成，除非遇到必须用户手操的情况（需要用户输入、密码、密钥等）
-- 修复策略：Git错误→清理重置；代码错误→检查语法；环境问题→检查路径配置；网络错误→重试
-- 修复后提交代码并附上说明
-
-**项目管理原则**：
-- 所有修改推送到GitHub并进行版本管理
-- 提交信息清晰说明修改内容
-- 修改后校验功能正常
+{kimi_md_content or "(请遵守项目规范，错误处理原则：遇到错误优先解决，不主动停止任务)"}
 
 ## 约束条件
 1. 所有修改必须在指定工作目录内
