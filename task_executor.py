@@ -12,6 +12,7 @@ from datetime import datetime
 from github_client import github_client, GHIssue, GitHubClientError
 from git_manager import git_manager, GitManagerError
 from kimi_runner import kimi_runner, TaskResult
+from auto_fixer import auto_fixer
 
 
 class TaskExecutorError(Exception):
@@ -157,15 +158,63 @@ class TaskExecutor:
                 return False
         
         except TaskExecutorError as e:
+            error_msg = str(e)
+            self._log(f"❌ 任务执行失败: {error_msg}")
+            
+            # 尝试自动修复
+            if self._try_auto_fix(error_msg):
+                self._log("🔄 自动修复成功，重新执行任务...")
+                return self.execute()
+            
             self._update_status('failed', f"任务执行失败: {e}")
             return False
         
         except Exception as e:
+            error_msg = str(e)
+            self._log(f"❌ 未知错误: {error_msg}")
+            
+            # 尝试自动修复
+            if self._try_auto_fix(error_msg):
+                self._log("🔄 自动修复成功，重新执行任务...")
+                return self.execute()
+            
             self._update_status('failed', f"未知错误: {e}")
             return False
         
         finally:
             self.end_time = datetime.now()
+    
+    def _try_auto_fix(self, error_msg: str) -> bool:
+        """尝试自动修复"""
+        try:
+            error_type, desc = auto_fixer.analyze_error(error_msg)
+            
+            if error_type == 'unknown':
+                return False
+            
+            self._log(f"🔧 自动修复: {desc}")
+            
+            if not auto_fixer.should_retry(error_type):
+                return False
+            
+            # 获取仓库名
+            metadata = self._parse_metadata(self.issue.body)
+            target_repo = metadata.get('target', self.repo)
+            
+            success, fix_desc = auto_fixer.try_fix(error_type, target_repo, error_msg)
+            
+            if success:
+                self._log(f"✅ {fix_desc}")
+                # 重置修复计数器限制
+                auto_fixer.fix_count = 0
+                return True
+            else:
+                self._log(f"⚠️ {fix_desc}")
+                return False
+        
+        except Exception as e:
+            self._log(f"⚠️ 自动修复出错: {e}")
+            return False
     
     def stop(self) -> None:
         """停止任务"""

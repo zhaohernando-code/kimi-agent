@@ -5,7 +5,7 @@
 #
 
 # 强制设置环境变量
-export GITHUB_TOKEN="${GITHUB_TOKEN:-YOUR_GITHUB_TOKEN_HERE}"
+export GITHUB_TOKEN="${GITHUB_TOKEN:-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}"
 export GITHUB_USERNAME="zhaohernando-code"
 export MAX_CONCURRENT_TASKS="3"
 export KIMI_TIMEOUT="3600"
