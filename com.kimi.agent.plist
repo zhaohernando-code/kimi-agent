@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.kimi.agent</string>
+    
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>/Users/hernando_zhao/kimi/agent/server.py</string>
+    </array>
+    
+    <key>WorkingDirectory</key>
+    <string>/Users/hernando_zhao/kimi/agent</string>
+    
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>KIMI_AGENT_KEY</key>
+        <string>change-me-in-production</string>
+        <key>KIMI_AGENT_PORT</key>
+        <string>8000</string>
+        <key>GITHUB_TOKEN</key>
+        <string>YOUR_GITHUB_TOKEN_HERE</string>
+        <key>GITHUB_USERNAME</key>
+        <string>zhaohernando-code</string>
+        <key>HTTP_PROXY</key>
+        <string>http://14ad864674363:7559d165cd@168.158.103.246:12323</string>
+        <key>HTTPS_PROXY</key>
+        <string>http://14ad864674363:7559d165cd@168.158.103.246:12323</string>
+    </dict>
+    
+    <key>RunAtLoad</key>
+    <true/>
+    
+    <key>KeepAlive</key>
+    <true/>
+    
+    <key>StandardOutPath</key>
+    <string>/Users/hernando_zhao/kimi/data/agent.log</string>
+    
+    <key>StandardErrorPath</key>
+    <string>/Users/hernando_zhao/kimi/data/agent.error.log</string>
+</dict>
+</plist>
