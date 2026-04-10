@@ -85,13 +85,47 @@ class GitManager:
                     repo.git.config('http.proxy', self.proxy_url)
                     repo.git.config('https.proxy', self.proxy_url)
                 
+                # 尝试切换到 main/master 分支并拉取
+                try:
+                    # 检查当前分支
+                    current_branch = repo.active_branch.name
+                    if current_branch.startswith('task/'):
+                        # 如果在任务分支，先切换到 main
+                        if 'main' in [b.name for b in repo.branches]:
+                            repo.git.checkout('main')
+                        elif 'master' in [b.name for b in repo.branches]:
+                            repo.git.checkout('master')
+                except Exception:
+                    pass  # 忽略切换分支错误
+                
                 # 拉取最新代码
                 with repo.git.custom_environment(**env):
                     origin.pull()
                 
                 return repo
             except GitCommandError as e:
-                raise GitManagerError(f"Failed to pull repository: {e}")
+                # Pull 失败，尝试强制重置到 origin/main
+                try:
+                    repo = Repo(repo_path)
+                    # 获取远程分支
+                    repo.git.fetch('origin')
+                    # 强制重置到 origin/main 或 origin/master
+                    try:
+                        repo.git.reset('--hard', 'origin/main')
+                    except GitCommandError:
+                        repo.git.reset('--hard', 'origin/master')
+                    return repo
+                except Exception as reset_error:
+                    # 重置也失败，删除目录重新克隆
+                    import shutil
+                    shutil.rmtree(repo_path, ignore_errors=True)
+                    os.makedirs(repo_path, exist_ok=True)
+                    # 继续执行克隆逻辑
+            except Exception as e:
+                # 其他错误，删除重新克隆
+                import shutil
+                shutil.rmtree(repo_path, ignore_errors=True)
+                os.makedirs(repo_path, exist_ok=True)
         else:
             # 不存在，执行 clone
             try:
